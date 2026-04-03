@@ -52,10 +52,10 @@ public class DevTunnelService
         }
     }
 
-    public async Task<bool> CreateTunnel(string name, string expiration)
+    public async Task<bool> CreateTunnel(string name, string expiration, bool isPersistent = false)
     {
         var args = $"create";
-        if (!string.IsNullOrEmpty(name)) args += $" --name {name}";
+        if (!string.IsNullOrEmpty(name)) args += $" {name}";
         if (!string.IsNullOrEmpty(expiration)) args += $" -e {expiration}";
         
         return await RunCommand("devtunnel", args);
@@ -63,7 +63,7 @@ public class DevTunnelService
 
     public async Task<bool> DeleteTunnel(string id)
     {
-        return await RunCommand("devtunnel", $"delete {id} --yes");
+        return await RunCommand("devtunnel", $"delete {id} --force");
     }
 
     public async Task<bool> AddPort(string id, int port)

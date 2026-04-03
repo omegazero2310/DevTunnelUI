@@ -33,99 +33,152 @@
       </ExperimentalAcrylicBorder.Material>
     </ExperimentalAcrylicBorder>
     
-    <Grid ColumnDefinitions="200, *">
-      <!-- Sidebar -->
-      <StackPanel Grid.Column="0" Spacing="5" Margin="10">
-        <TextBlock Text="DevTunnel Gateway" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,10,0,20"/>
-        
-        <Button Content="Dashboard" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" />
-        <Button Content="Tunnels" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" />
-        <Button Content="Gateway" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" />
-        
-        <Rectangle Height="20" />
-        
-        <Border Height="1" Background="Gray" Opacity="0.3" Margin="0,10"/>
-        
-        <Button Command="{Binding CheckStatusCommand}" IsEnabled="{Binding !IsBusy}"
-                Content="Check Status" HorizontalAlignment="Stretch" />
-      </StackPanel>
+    <Border Margin="25" CornerRadius="12" Background="#1E1E1E" Opacity="0.95" BoxShadow="0 8 32 0 #50000000">
+      <Grid RowDefinitions="Auto, *">
+        <!-- Header/Status -->
+        <Border Grid.Row="0" Margin="30,25,30,10" Padding="15,12" Background="#262626" CornerRadius="8">
+           <StackPanel Orientation="Horizontal" Spacing="10">
+             <Ellipse Width="12" Height="12" Fill="{Binding IsHostReady, Converter={StaticResource BoolToColorConverter}}" />
+             <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="LightGray" FontWeight="Medium" />
+           </StackPanel>
+        </Border>
 
-      <!-- Main Content -->
-      <Border Grid.Column="1" Margin="10" CornerRadius="8" Background="#1E1E1E" Opacity="0.9">
-        <Grid RowDefinitions="Auto, *">
-          <!-- Header/Status -->
-          <StackPanel Orientation="Horizontal" Spacing="10" Margin="20">
-            <Ellipse Width="10" Height="10" Fill="{Binding IsInstalled, Converter={StaticResource BoolToColorConverter}}" />
-            <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="LightGray" />
-          </StackPanel>
-
-          <!-- Content -->
-          <ScrollViewer Grid.Row="1" Margin="20">
-            <StackPanel Spacing="20">
-              <StackPanel IsVisible="{Binding !IsInstalled}">
-                <TextBlock Text="Get Started" FontSize="20" FontWeight="SemiBold" Foreground="White" />
-                <TextBlock Text="DevTunnel CLI is missing. Install it to begin." Foreground="Gray" Margin="0,5,0,15" />
-                <Button Content="Install DevTunnel" Command="{Binding InstallCommand}" 
-                        Classes="accent" Width="200" HorizontalContentAlignment="Center"/>
-              </StackPanel>
-
-              <StackPanel IsVisible="{Binding IsInstalled}">
-                <TextBlock Text="Active Tunnels" FontSize="20" FontWeight="SemiBold" Foreground="White" />
+        <ScrollViewer Grid.Row="1" Margin="30,10,30,30">
+          <Grid>
+             <!-- Init View -->
+             <StackPanel IsVisible="{Binding IsInitializing}" Spacing="25" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,50,0,0">
+                <TextBlock Text="Welcome to DevTunnel" FontSize="36" FontWeight="Bold" Foreground="White" TextAlignment="Center" />
                 
-                <ListBox ItemsSource="{Binding Tunnels}" 
-                         SelectedItem="{Binding SelectedTunnel}"
-                         Background="Transparent" BorderThickness="0">
-                  <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="models:TunnelInfo">
-                      <Border Padding="5">
-                        <Grid ColumnDefinitions="*, Auto">
-                          <StackPanel>
-                            <TextBlock Text="{Binding TunnelId}" FontWeight="Bold" Foreground="White" />
-                            <TextBlock Text="{Binding PublicUrl}" FontSize="12" Foreground="Gray" />
-                          </StackPanel>
-                          <Button Grid.Column="1" Content="Host" Classes="accent" VerticalAlignment="Center" />
-                        </Grid>
-                      </Border>
-                    </DataTemplate>
-                  </ListBox.ItemTemplate>
-                </ListBox>
+                <StackPanel IsVisible="{Binding NeedsInstall}">
+                  <TextBlock Text="DevTunnel CLI is missing. Install it to begin." Foreground="#B0B0B0" FontSize="16" Margin="0,5,0,25" TextAlignment="Center" />
+                  <Button Content="Install DevTunnel" Command="{Binding InstallCommand}" 
+                          Classes="accent" Width="240" Padding="12" CornerRadius="6" FontWeight="SemiBold" HorizontalContentAlignment="Center" HorizontalAlignment="Center"/>
+                </StackPanel>
+                
+                <StackPanel IsVisible="{Binding NeedsLogin}">
+                  <TextBlock Text="DevTunnel CLI is installed. Login to continue." Foreground="#B0B0B0" FontSize="16" Margin="0,5,0,25" TextAlignment="Center" />
+                  <Button Content="Login to DevTunnel" Command="{Binding LoginCommand}" Width="240" Padding="12" CornerRadius="6" HorizontalContentAlignment="Center" Classes="accent" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                </StackPanel>
+             </StackPanel>
 
-                <!-- Gateway Rules Editor -->
-                <StackPanel IsVisible="{Binding SelectedTunnel, Converter={StaticResource NotNullConverter}}" Margin="0,20,0,0">
-                  <Border Height="1" Background="Gray" Opacity="0.3" Margin="0,0,0,20"/>
-                  <TextBlock Text="Gateway Rules" FontSize="18" FontWeight="SemiBold" Foreground="White" />
+             <!-- Host/Tunnels View -->
+             <Grid IsVisible="{Binding IsHostReady}" ColumnDefinitions="*, 350">
+               <!-- Left Column: Host List & Create Host -->
+               <StackPanel Grid.Column="0" Spacing="20" Margin="0,0,20,0">
+                  <StackPanel Orientation="Horizontal" Spacing="15">
+                    <TextBlock Text="Active Hosts" FontSize="28" FontWeight="Bold" Foreground="White" />
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" VerticalAlignment="Center" Width="100" Height="4" Foreground="#4A90E2" Background="#333" />
+                  </StackPanel>
                   
-                  <Grid ColumnDefinitions="*, *, Auto" Margin="0,10">
-                    <TextBox Text="{Binding NewPath}" Watermark="Path" Margin="0,0,5,0" />
-                    <TextBox Grid.Column="1" Text="{Binding NewTarget}" Watermark="Target" Margin="0,0,5,0" />
-                    <Button Grid.Column="2" Content="Add Rule" Command="{Binding AddRuleCommand}" Classes="accent" />
-                  </Grid>
+                  <!-- Create Host Inline Form -->
+                  <Border Background="#252525" Padding="15" CornerRadius="8" BorderBrush="#333" BorderThickness="1">
+                    <StackPanel Spacing="10">
+                      <TextBlock Text="Create New Host" FontWeight="SemiBold" Foreground="White" />
+                      <Grid ColumnDefinitions="*, *, Auto, Auto" Margin="0">
+                        <TextBox Grid.Column="0" Text="{Binding NewHostName}" Watermark="Name (Optional)" Margin="0,0,10,0" CornerRadius="4" />
+                        <NumericUpDown Grid.Column="1" Value="{Binding NewHostPort}" Minimum="1" Maximum="65535" Margin="0,0,10,0" CornerRadius="4" />
+                        <CheckBox Grid.Column="2" Content="Persistent URL" IsChecked="{Binding IsPersistentUrl}" Foreground="White" Margin="0,0,15,0" />
+                        <Button Grid.Column="3" Content="Create Host" Command="{Binding CreateHostCommand}" Classes="accent" CornerRadius="4" Padding="15,6" />
+                      </Grid>
+                    </StackPanel>
+                  </Border>
 
-                  <ItemsControl ItemsSource="{Binding SelectedTunnel.Rules}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="services:GatewayRule">
-                        <Border Margin="0,2" Padding="10" Background="#333333" CornerRadius="4">
-                          <Grid ColumnDefinitions="*, *, Auto">
-                            <TextBlock Text="{Binding Path}" VerticalAlignment="Center" Foreground="White" />
-                            <TextBlock Grid.Column="1" Text="{Binding Destination}" VerticalAlignment="Center" Foreground="Gray" />
-                            <Button Grid.Column="2" Content="Remove" 
-                                    Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).RemoveRuleCommand}" 
-                                    CommandParameter="{Binding}" Foreground="Red" Background="Transparent" />
+                  <ListBox ItemsSource="{Binding Tunnels}" 
+                           SelectedItem="{Binding SelectedTunnel}"
+                           Background="Transparent" BorderThickness="0" CornerRadius="8">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="models:TunnelInfo">
+                        <Border Padding="15" Margin="0,5" Background="{Binding IsSelected, Converter={StaticResource SelectedToBrushConverter}, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" CornerRadius="8" BorderBrush="#3D3D3D" BorderThickness="1">
+                          <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel>
+                              <TextBlock Text="{Binding TunnelId}" FontWeight="Bold" FontSize="16" Foreground="White" />
+                              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                <TextBlock Text="{Binding PublicUrl}" FontSize="14" Foreground="#4A90E2" VerticalAlignment="Center" />
+                                <Button Content="Copy" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).CopyUrlCommand}" CommandParameter="{Binding PublicUrl}" Padding="8,4" FontSize="11" CornerRadius="4" VerticalAlignment="Center" Classes="accent" />
+                              </StackPanel>
+                              <TextBlock Text="{Binding Expiration, StringFormat='Expires: {0}'}" FontSize="12" Foreground="Gray" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <!-- Shutdown Button -->
+                            <Button Grid.Column="1" Content="Shutdown" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ShutdownHostCommand}" CommandParameter="{Binding}" Foreground="#FF6B6B" Background="Transparent" BorderBrush="#FF6B6B" BorderThickness="1" CornerRadius="4" Padding="12,6" VerticalAlignment="Center" />
                           </Grid>
                         </Border>
                       </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+               </StackPanel>
 
-                  <Button Content="Start Gateway Service" Command="{Binding StartGatewayCommand}" Margin="0,20,0,0" HorizontalAlignment="Center" />
-                </StackPanel>
-                
-                <Button Content="Login to DevTunnel" Command="{Binding LoginCommand}" Margin="0,20,0,0" />
-              </StackPanel>
-            </StackPanel>
-          </ScrollViewer>
-        </Grid>
-      </Border>
-    </Grid>
+               <!-- Right Column: Gateway Config -->
+               <StackPanel Grid.Column="1" Spacing="20">
+                 <Grid ColumnDefinitions="*, Auto">
+                   <TextBlock Text="Gateway Config" FontSize="28" FontWeight="Bold" Foreground="White" />
+                   <Button Grid.Column="1" Content="Save Config" Command="{Binding SaveGatewayConfigsCommand}" Classes="accent" CornerRadius="4" />
+                 </Grid>
+                 
+                 <Panel IsVisible="{Binding HasSelectedTunnel}">
+                   <StackPanel Spacing="15">
+                     <TextBlock Text="{Binding SelectedTunnel.TunnelId, StringFormat='Configuring: {0}'}" FontSize="15" Foreground="#A0A0A0" Margin="0,-5,0,0" />
+                     
+                     <Border Background="#252525" Padding="15" CornerRadius="8" BorderBrush="#333" BorderThickness="1">
+                       <StackPanel Spacing="10">
+                         <TextBlock Text="Add New Routing Rule" FontWeight="SemiBold" Foreground="White" />
+                         <TextBlock Text="Specify the incoming path and the target local service to route requests to." Foreground="#A0A0A0" FontSize="12" TextWrapping="Wrap" />
+                         
+                         <!-- Path Matcher -->
+                         <Grid ColumnDefinitions="*, Auto" Margin="0,5,0,0">
+                            <TextBlock Grid.Column="0" Text="Path Matcher" Foreground="#C0C0C0" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" Text="Example: /api or /" Foreground="#555" FontSize="11" />
+                         </Grid>
+                         <TextBox Text="{Binding NewPath}" Watermark="/api" CornerRadius="4" />
+                         
+                         <!-- Target Service URL -->
+                         <Grid ColumnDefinitions="*, Auto" Margin="0,5,0,0">
+                            <TextBlock Grid.Column="0" Text="Target Service URL" Foreground="#C0C0C0" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" Text="Example: http://localhost:8080" Foreground="#555" FontSize="11" />
+                         </Grid>
+                         <TextBox Text="{Binding NewTarget}" Watermark="http://localhost:8080" CornerRadius="4" />
+                         
+                         <Button Content="Add Rule" Command="{Binding AddRuleCommand}" Classes="accent" CornerRadius="4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,10,0,0" />
+                       </StackPanel>
+                     </Border>
+
+                     <ItemsControl ItemsSource="{Binding SelectedTunnel.Rules}" Margin="0,5,0,0">
+                       <ItemsControl.ItemTemplate>
+                         <DataTemplate x:DataType="services:GatewayRule">
+                           <Border Margin="0,4" Padding="12" Background="#2A2A2B" CornerRadius="6" BorderBrush="#3A3A3B" BorderThickness="1">
+                             <Grid ColumnDefinitions="*, Auto">
+                               <StackPanel>
+                                 <TextBlock Text="{Binding Path}" Foreground="White" FontWeight="SemiBold" FontSize="14" />
+                                 <TextBlock Text="{Binding Destination}" Foreground="#A0A0A0" FontSize="13" Margin="0,2,0,0" />
+                               </StackPanel>
+                               <Button Grid.Column="1" Content="Remove" 
+                                       Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).RemoveRuleCommand}" 
+                                       CommandParameter="{Binding}" Foreground="#FF6B6B" Background="Transparent" 
+                                       BorderThickness="0" Padding="8" VerticalAlignment="Center" />
+                             </Grid>
+                           </Border>
+                         </DataTemplate>
+                       </ItemsControl.ItemTemplate>
+                     </ItemsControl>
+
+                     <Button Content="Start Service" Command="{Binding StartGatewayCommand}" 
+                             Margin="0,15,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="12" CornerRadius="6" Classes="accent" FontSize="15" FontWeight="Bold" />
+                   </StackPanel>
+                 </Panel>
+                 
+                 <Border IsVisible="{Binding !HasSelectedTunnel}" 
+                         Background="#252525" Padding="25" CornerRadius="8" BorderBrush="#333" BorderThickness="1">
+                   <StackPanel Spacing="10" HorizontalAlignment="Center">
+                     <TextBlock Text="Select a Host" FontSize="18" FontWeight="SemiBold" Foreground="White" TextAlignment="Center" />
+                     <TextBlock Text="Choose a host from the list to view and edit its gateway rules." 
+                                Foreground="#A0A0A0" TextAlignment="Center" FontSize="14" TextWrapping="Wrap" />
+                   </StackPanel>
+                 </Border>
+
+               </StackPanel>
+             </Grid>
+          </Grid>
+        </ScrollViewer>
+      </Grid>
+    </Border>
   </Panel>
 </UserControl>
