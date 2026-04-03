@@ -3,9 +3,10 @@
         xmlns:vm="using:DevTunnelUI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:DevTunnelUI.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="DevTunnelUI.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
+        x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="DevTunnelUI">
 
@@ -15,6 +16,6 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <views:MainView />
 
 </Window>
