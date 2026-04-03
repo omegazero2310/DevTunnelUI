@@ -1,0 +1,23 @@
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Avalonia-specific
+.avalonia/
+visualstudio.cache
+
+# User-specific
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.pdb
+
+# OS-specific
+.DS_Store
+Thumbs.db

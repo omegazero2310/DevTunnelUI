@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:DevTunnelUI.ViewModels"
+             xmlns:models="clr-namespace:DevTunnelUI.Models"
+             xmlns:services="clr-namespace:DevTunnelUI.Services"
+             xmlns:conv="clr-namespace:DevTunnelUI.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="DevTunnelUI.Views.MainView"
+             x:DataType="vm:MainViewModel"
+             Background="Transparent">
+
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <conv:BoolToColorConverter x:Key="BoolToColorConverter" />
+      <conv:SelectedToBrushConverter x:Key="SelectedToBrushConverter" />
+      <conv:NotNullConverter x:Key="NotNullConverter" />
+    </ResourceDictionary>
+  </UserControl.Resources>
+  
+  <Design.DataContext>
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+  <Panel>
+    <ExperimentalAcrylicBorder IsHitTestVisible="False">
+      <ExperimentalAcrylicBorder.Material>
+        <ExperimentalAcrylicMaterial
+            TintColor="Black"
+            TintOpacity="0.8"
+            MaterialOpacity="0.65" />
+      </ExperimentalAcrylicBorder.Material>
+    </ExperimentalAcrylicBorder>
+    
+    <Grid ColumnDefinitions="200, *">
+      <!-- Sidebar -->
+      <StackPanel Grid.Column="0" Spacing="5" Margin="10">
+        <TextBlock Text="DevTunnel Gateway" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,10,0,20"/>
+        
+        <Button Content="Dashboard" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" />
+        <Button Content="Tunnels" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" />
+        <Button Content="Gateway" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" />
+        
+        <Rectangle Height="20" />
+        
+        <Border Height="1" Background="Gray" Opacity="0.3" Margin="0,10"/>
+        
+        <Button Command="{Binding CheckStatusCommand}" IsEnabled="{Binding !IsBusy}"
+                Content="Check Status" HorizontalAlignment="Stretch" />
+      </StackPanel>
+
+      <!-- Main Content -->
+      <Border Grid.Column="1" Margin="10" CornerRadius="8" Background="#1E1E1E" Opacity="0.9">
+        <Grid RowDefinitions="Auto, *">
+          <!-- Header/Status -->
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="20">
+            <Ellipse Width="10" Height="10" Fill="{Binding IsInstalled, Converter={StaticResource BoolToColorConverter}}" />
+            <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="LightGray" />
+          </StackPanel>
+
+          <!-- Content -->
+          <ScrollViewer Grid.Row="1" Margin="20">
+            <StackPanel Spacing="20">
+              <StackPanel IsVisible="{Binding !IsInstalled}">
+                <TextBlock Text="Get Started" FontSize="20" FontWeight="SemiBold" Foreground="White" />
+                <TextBlock Text="DevTunnel CLI is missing. Install it to begin." Foreground="Gray" Margin="0,5,0,15" />
+                <Button Content="Install DevTunnel" Command="{Binding InstallCommand}" 
+                        Classes="accent" Width="200" HorizontalContentAlignment="Center"/>
+              </StackPanel>
+
+              <StackPanel IsVisible="{Binding IsInstalled}">
+                <TextBlock Text="Active Tunnels" FontSize="20" FontWeight="SemiBold" Foreground="White" />
+                
+                <ListBox ItemsSource="{Binding Tunnels}" 
+                         SelectedItem="{Binding SelectedTunnel}"
+                         Background="Transparent" BorderThickness="0">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:TunnelInfo">
+                      <Border Padding="5">
+                        <Grid ColumnDefinitions="*, Auto">
+                          <StackPanel>
+                            <TextBlock Text="{Binding TunnelId}" FontWeight="Bold" Foreground="White" />
+                            <TextBlock Text="{Binding PublicUrl}" FontSize="12" Foreground="Gray" />
+                          </StackPanel>
+                          <Button Grid.Column="1" Content="Host" Classes="accent" VerticalAlignment="Center" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Gateway Rules Editor -->
+                <StackPanel IsVisible="{Binding SelectedTunnel, Converter={StaticResource NotNullConverter}}" Margin="0,20,0,0">
+                  <Border Height="1" Background="Gray" Opacity="0.3" Margin="0,0,0,20"/>
+                  <TextBlock Text="Gateway Rules" FontSize="18" FontWeight="SemiBold" Foreground="White" />
+                  
+                  <Grid ColumnDefinitions="*, *, Auto" Margin="0,10">
+                    <TextBox Text="{Binding NewPath}" Watermark="Path" Margin="0,0,5,0" />
+                    <TextBox Grid.Column="1" Text="{Binding NewTarget}" Watermark="Target" Margin="0,0,5,0" />
+                    <Button Grid.Column="2" Content="Add Rule" Command="{Binding AddRuleCommand}" Classes="accent" />
+                  </Grid>
+
+                  <ItemsControl ItemsSource="{Binding SelectedTunnel.Rules}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="services:GatewayRule">
+                        <Border Margin="0,2" Padding="10" Background="#333333" CornerRadius="4">
+                          <Grid ColumnDefinitions="*, *, Auto">
+                            <TextBlock Text="{Binding Path}" VerticalAlignment="Center" Foreground="White" />
+                            <TextBlock Grid.Column="1" Text="{Binding Destination}" VerticalAlignment="Center" Foreground="Gray" />
+                            <Button Grid.Column="2" Content="Remove" 
+                                    Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).RemoveRuleCommand}" 
+                                    CommandParameter="{Binding}" Foreground="Red" Background="Transparent" />
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <Button Content="Start Gateway Service" Command="{Binding StartGatewayCommand}" Margin="0,20,0,0" HorizontalAlignment="Center" />
+                </StackPanel>
+                
+                <Button Content="Login to DevTunnel" Command="{Binding LoginCommand}" Margin="0,20,0,0" />
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+    </Grid>
+  </Panel>
+</UserControl>
