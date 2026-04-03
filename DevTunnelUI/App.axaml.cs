@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using Avalonia.Markup.Xaml;
 using DevTunnelUI.ViewModels;
 using DevTunnelUI.Views;
@@ -32,6 +33,7 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "We are disabling data annotation validation which is safe to trim if not used.")]
     private void DisableAvaloniaDataAnnotationValidation()
     {
         // Get an array of plugins to remove
